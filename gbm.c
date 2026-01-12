@@ -63,7 +63,9 @@ void generate_training_data(double *X0, double *XT)
 void initialise_network_weights(double (*W1)[neurons_out])
 {
     srand(time(NULL)); // seed with currtime
-    double lim_glorot = sqrt(6 / (neurons_in + neurons_out)); 
+    double temp_sum_neur = neurons_in + neurons_out;
+    double temp_scale = 6 / temp_sum_neur;
+    double lim_glorot = sqrt(temp_scale); 
     
    for (int i=0; i<neurons_in; i++) //use glorot uniform, ie sample initial weights from uniform
     {
