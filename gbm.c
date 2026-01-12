@@ -63,10 +63,9 @@ void generate_training_data(double *X0, double *XT)
 void initialise_network_weights(double (*W1)[neurons_out])
 {
     srand(time(NULL)); // seed with currtime
-    double temp_sum_neur = neurons_in + neurons_out;
-    double temp_scale = 6 / temp_sum_neur;
-    double lim_glorot = sqrt(temp_scale); 
-    
+
+    double lim_glorot = sqrt(6 / ((double) (neurons_in + neurons_out)));  //compute initialisation scale
+
    for (int i=0; i<neurons_in; i++) //use glorot uniform, ie sample initial weights from uniform
     {
         for (int j=0; j<neurons_out; j++)
@@ -82,11 +81,10 @@ double mse_loss(double *XT, double *X0)
     double temp = 0;
     for (int i=1; i<batch; i++)
     {   
-        double temp1 = fabs(XT[i] - X0[i]);
-        temp += temp1;
-       
+        temp += (double) (pow(XT[i] - X0[i],2)) ;
+
     }
-    {return temp/batch;}
+    {return sqrt(temp/batch);}
 }
 
 
@@ -104,7 +102,6 @@ void main()
     
     generate_training_data(X0, XT);
 
-    
     double loss_temp = mse_loss(XT,X0);
     
     printf("Loss %f",loss_temp);
