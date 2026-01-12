@@ -60,7 +60,7 @@ void generate_training_data(double *X0, double *XT)
     }   
 }
 
-void initialise_network_weights(double W1[][neurons_out])
+void initialise_network_weights(double (*W1)[neurons_out])
 {
     srand(time(NULL)); // seed with currtime
     double lim_glorot = sqrt(6 / (neurons_in + neurons_out)); 
@@ -73,12 +73,26 @@ void initialise_network_weights(double W1[][neurons_out])
     }}
 }
 
+double mse_loss(double *XT, double *X0)
+{
+    // computes mean squared error between input and output
+    
+    double temp = 0;
+    for (int i=1; i<batch; i++)
+    {   
+        double temp1 = fabs(XT[i] - X0[i]);
+        temp += temp1;
+       
+    }
+    {return temp/batch;}
+}
+
 
 //driver
 void main()
 {
-    double X0[batch] ={0} ; //initial 
-    double XT[batch] ={0} ; //final
+    double X0[batch] = {0} ; //initial 
+    double XT[batch] = {0} ; //final
 
     double W1[neurons_in][neurons_out] ={{0}} ; //layer weights
 
@@ -87,4 +101,10 @@ void main()
     initialise_network_weights(W1);
     
     generate_training_data(X0, XT);
+
+    
+    double loss_temp = mse_loss(XT,X0);
+    
+    printf("Loss %f",loss_temp);
+    
 }
