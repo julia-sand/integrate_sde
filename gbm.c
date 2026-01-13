@@ -7,7 +7,7 @@
 /*problem variables*/
 #define mu 1
 #define sigma 1 
-#define neurons_in 8
+#define neurons_in 2
 #define neurons_out 1
 #define batch 10
 
@@ -74,6 +74,24 @@ void initialise_network_weights(double (*W1)[neurons_out])
     }}
 }
 
+double* forward_pass(double *X0, double (*W1)[neurons_out], double *bias)
+{
+    double* xout = (double*)malloc(batch * sizeof(double));
+    
+    for (int bi=0; bi<batch; bi++)
+            {
+        for (int i=0; i<neurons_in; i++)
+            {
+            for (int j=0; j<neurons_out; j++)
+        {
+            
+            xout[bi] = W1[i][j] * X0[bi] + bias[i];
+            }
+        }
+    }
+    return xout;
+}
+
 double mse_loss(double *XT, double *X0)
 {
     // computes mean squared error between input and output
@@ -101,8 +119,10 @@ void main()
     initialise_network_weights(W1);
     
     generate_training_data(X0, XT);
+    
+    double* xin = forward_pass(X0,W1,bias);
 
-    double loss_temp = mse_loss(XT,X0);
+    double loss_temp = mse_loss(XT,xin);
     
     printf("Loss %f",loss_temp);
     
