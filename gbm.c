@@ -54,40 +54,51 @@ void generate_training_data(double *X0, double *XT)
         
     for (int i=0; i<batch;i++)
     {
-        X0[i] = generate_uniform();
-        XT[i] = integrate_gbm(X0[i],10,dt);
+        X0[i] = generate_uniform(); //sample initial position
+        XT[i] = integrate_gbm(X0[i],10,dt); //integrates the auxillary sde process
         //printf("%f\n",XT[i]);
     }   
 }
 
-void initialise_network_weights(double (*W1)[neurons_out])
+
+double* make_weights_matrix(int neurons_in_var, int neurons_out_var)
 {
     srand(time(NULL)); // seed with currtime
 
-    double lim_glorot = sqrt(6 / ((double) (neurons_in + neurons_out)));  //compute initialisation scale
-
-   for (int i=0; i<neurons_in; i++) //use glorot uniform, ie sample initial weights from uniform
-    {
-        for (int j=0; j<neurons_out; j++)
-            {
-            W1[i][j] = generate_uniform_shifted(lim_glorot);
-    }}
+    double lim_glorot = sqrt(6 / ((double) (neurons_in_var + neurons_out_var)));  //compute initialisation scale
+    
+    double  ** W=( double * * ) malloc ( sizeof ( double * ) * neurons_in_var );     //allocate neurons_in_var rows 
+    
+    for (int i=0; i<neurons_out_var; i++)
+        {
+            W[i] = (int *)malloc(sizeof(double)*neurons_out_var); //allocate neurons_out_var cols per row
+            for (int j=0; j<neurons_out_var; j++)
+        {
+            W[i][j] = generate_uniform_shifted(lim_glorot);  //sample initial weights 
+            }
+        }
+    return W;
 }
 
-double* forward_pass(double *X0, double (*W1)[neurons_out], double *bias)
+double* forward_pass(int neurons_in_var, int neurons_out_var, double (*X0)[neurons_in_var], double weights[neurons_out_var][neurons_in_var], double bias[neurons_out_var])
 {
-    double* xout = (double*)malloc(batch * sizeof(double));
+    double  ** xout =( double * * ) malloc ( sizeof ( double * ) * batch );     //allocate batch rows 
     
     for (int bi=0; bi<batch; bi++)
             {
-        for (int i=0; i<neurons_in; i++)
+                xout[bi] = (int *)malloc(sizeof(double)*neurons_out_var); //allocate neurons_out_var cols per row
+        
+        for (int i=0; i<neurons_out_var; i++)
             {
-            for (int j=0; j<neurons_out; j++)
+            for (int j=0; j<neurons_in_var; j++)
         {
             
-            xout[bi] = W1[i][j] * X0[bi] + bias[i];
+            xout[bi][i] += weights[i][j] * X0[bi][j]; //sum up the weights 
             }
-        }
+        
+            xout[bi][i] += bias[i]; //add the bias
+            xout[bi][i] = tanh(xout[bi][i]); //apply an activation
+            }
     }
     return xout;
 }
@@ -106,24 +117,25 @@ double mse_loss(double *XT, double *X0)
 }
 
 
+
 //driver
 void main()
 {
-    double X0[batch] = {0} ; //initial 
+    double X0[batch][1] = {{0}} ; //initial 
     double XT[batch] = {0} ; //final
 
-    double W1[neurons_in][neurons_out] ={{0}} ; //layer weights
+    double bias[1] ={0} ; //layer bias
+    double* W1 = make_weights_matrix(1,2);
 
-    double bias[neurons_in] ; //layer bias
-
-    initialise_network_weights(W1);
-    
     generate_training_data(X0, XT);
     
-    double* xin = forward_pass(X0,W1,bias);
+    double* xout = forward_pass(1, 2, X0, W1, bias);
+    printf("Loss %f",xout);
 
-    double loss_temp = mse_loss(XT,xin);
+    //double* xin = forward_pass(X0,W1,bias);
+
+    //double loss_temp = mse_loss(XT,xin);
     
-    printf("Loss %f",loss_temp);
+    //printf("Loss %f",loss_temp);
     
 }
