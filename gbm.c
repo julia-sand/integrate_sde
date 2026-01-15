@@ -56,7 +56,6 @@ void generate_training_data(double *X0, double *XT)
     {
         X0[i] = generate_uniform(); //sample initial position
         XT[i] = integrate_gbm(X0[i],10,dt); //integrates the auxillary sde process
-        //printf("%f\n",XT[i]);
     }   
 }
 
@@ -69,18 +68,19 @@ double* make_weights_matrix(int neurons_in_var, int neurons_out_var)
     
     double  ** W=( double * * ) malloc ( sizeof ( double * ) * neurons_in_var );     //allocate neurons_in_var rows 
     
-    for (int i=0; i<neurons_out_var; i++)
+    for (int i=0; i<neurons_in_var; i++)
         {
             W[i] = (int *)malloc(sizeof(double)*neurons_out_var); //allocate neurons_out_var cols per row
             for (int j=0; j<neurons_out_var; j++)
         {
             W[i][j] = generate_uniform_shifted(lim_glorot);  //sample initial weights 
+            printf("weight %f\n",W[i][j]);
             }
         }
     return W;
 }
 
-double* forward_pass(int neurons_in_var, int neurons_out_var, double (*X0)[neurons_in_var], double weights[neurons_out_var][neurons_in_var], double bias[neurons_out_var])
+double* forward_pass(int neurons_in_var, int neurons_out_var, double (*X0)[neurons_in_var], double weights[neurons_in_var][neurons_out_var], double bias[neurons_out_var])
 {
     double  ** xout =( double * * ) malloc ( sizeof ( double * ) * batch );     //allocate batch rows 
     
@@ -92,12 +92,13 @@ double* forward_pass(int neurons_in_var, int neurons_out_var, double (*X0)[neuro
             {
             for (int j=0; j<neurons_in_var; j++)
         {
-            
             xout[bi][i] += weights[i][j] * X0[bi][j]; //sum up the weights 
-            }
+             //printf("x0 %f\n",X0[bi][j]) ;
+             printf("value %f\n",weights[i][j]) ;
+           }
         
-            xout[bi][i] += bias[i]; //add the bias
-            xout[bi][i] = tanh(xout[bi][i]); //apply an activation
+            //xout[bi][i] += bias[i]; //add the bias
+            //xout[bi][i] = tanh(xout[bi][i]); //apply an activation
             }
     }
     return xout;
@@ -130,7 +131,7 @@ void main()
     generate_training_data(X0, XT);
     
     double* xout = forward_pass(1, 2, X0, W1, bias);
-    printf("Loss %f",xout);
+    //printf("Loss %f",W1);
 
     //double* xin = forward_pass(X0,W1,bias);
 
