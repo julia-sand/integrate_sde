@@ -1,4 +1,5 @@
-#include <stdio.h>
+#include "gbm.h"
+
 #include <stdio.h>
 #include <time.h>
 #include <math.h>
@@ -13,27 +14,27 @@
 #define batch 10
 
 /*initialise layer weights and biases*/
-double W1[neurons_in][neurons_hidden];
-double W2[neurons_hidden][neurons_hidden];
-double W3[neurons_hidden][neurons_out];
-double bias1[neurons_hidden];
-double bias2[neurons_hidden];
-double bias3[neurons_out];
+static double W1[neurons_in][neurons_hidden];
+static double W2[neurons_hidden][neurons_hidden];
+static double W3[neurons_hidden][neurons_out];
+static double bias1[neurons_hidden];
+static double bias2[neurons_hidden];
+static double bias3[neurons_out];
 
-double generate_uniform()
+static double generate_uniform()
 /*returns a U(0,1) random variable*/
 {
     return (double)rand() / (double)RAND_MAX;
     
 }
 
-double generate_uniform_shifted(double lim)
+static double generate_uniform_shifted(double lim)
 /*returns a U(-limit,limit) random variable*/
 {   
     return (double)((2*lim)*(double)generate_uniform()) - lim;
 }
 
-double nrand()
+static double nrand()
 /*takes two uniform random variables and generates a normal random variable using the box muller transform*/
 {
     return (double)sqrt(-2*log(generate_uniform()))*cos(4*acos(0)*generate_uniform());
@@ -44,7 +45,7 @@ double integrate_gbm(double x0, int tsteps, double dt)
     double xs[tsteps];
     xs[0] = x0;
     for (int i=1; i<tsteps; i++)
-    {   
+    {
         xs[i] = xs[i-1] + mu*xs[i-1]*dt + sqrt(2*dt)*nrand();
     }
     return xs[tsteps-1];
@@ -53,21 +54,21 @@ double integrate_gbm(double x0, int tsteps, double dt)
 void generate_training_data(double *X0, double *XT)
 {
     srand(time(NULL)); // seed with currtime
-    
+
     double dt = 0.01;
-        
+
     for (int i=0; i<batch;i++)
     {
         X0[i] = generate_uniform(); //sample initial position
         XT[i] = integrate_gbm(X0[i],10,dt); //integrates the auxillary sde process
-    }   
+    }
 }
 
 
-double* forward_pass(double X0[batch][neurons_in])
+static double* forward_pass(double X0[batch][neurons_in])
 {
     double  ** xout =( double * * ) malloc ( sizeof ( double * ) * batch );     //allocate batch rows 
-    
+ 
     /*pass through first layer*/
     for (int bi=0; bi<batch; bi++)
     {
@@ -88,7 +89,7 @@ double* forward_pass(double X0[batch][neurons_in])
 }
 
 double mse_loss(double *XT, double *X0)
-{   
+{
     // computes mean squared error between input and output
     double temp = 0;
     for (int i=1; i<batch; i++)
@@ -100,7 +101,7 @@ double mse_loss(double *XT, double *X0)
 
 //driver
 void main()
-{   
+{
     double X0[batch][neurons_in] = {{0}} ; //initial 
     double XT[batch][neurons_out] = {{0}} ; //final
     
